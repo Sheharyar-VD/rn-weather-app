@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { StyleSheet, View, ImageBackground, Alert, Platform, Linking, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, ImageBackground, Alert, Platform, Linking, TouchableOpacity, Image, BackHandler } from 'react-native';
 import * as Location from 'expo-location';
 import * as Battery from 'expo-battery';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -38,7 +38,7 @@ export default function App() {
         stopLocationServices(batteryLevel);
       });
       
-      if (batteryLevel < 0.20) fetchDataFromApi(location.coords.latitude, location.coords.longitude);
+      if (batteryLevel > 0.20) fetchDataFromApi(location.coords.latitude, location.coords.longitude);
       else setNoLocation(true);
     } catch (err) {
       console.error(err);
@@ -48,7 +48,7 @@ export default function App() {
   Location.startLocationUpdatesAsync(BACKGROUND_FETCH_TASK, {
     accuracy: Location.Accuracy.Highest,
     distanceInterval: 1, // minimum change (in meters) betweens updates
-    deferredUpdatesInterval: 1000, // minimum interval (in milliseconds) between updates
+    deferredUpdatesInterval: 60000, // minimum interval (in milliseconds) between updates
     // foregroundService is how you get the task to be updated as often as would be if the app was open
     foregroundService: {
       notificationTitle: 'Using your location',
@@ -111,38 +111,48 @@ export default function App() {
   }
 
   const stopLocationServices = (batteryLevel) => {
-    if (batteryLevel < 0.20) {
+    if (batteryLevel < 0.20 && !noLocation) {
       Alert.alert(
-        "Battery Low ! ! !",
-        "Stopping location services for this application",
+        "Battery Low",
+        "Stopping Location services and closing application",
       );
+      (async () => {
+        const batteryNotification = await Notification.scheduleNotificationAsync({
+          content: {
+              title: 'Battery Low',
+              body: 'Stopping Location services and closing application',
+          },
+          trigger: null,
+        });
+        Notification.removePushTokenSubscription(batteryNotification);
+      })();
       Location.stopLocationUpdatesAsync(BACKGROUND_FETCH_TASK);
       setNoLocation(true);
+      setLocationData(null)
+      BackHandler.exitApp();
     }
   }
 
   const onCaptureScreen = () => {
-    console.log("capturing 1233");
     (async () => {
-      console.log("capturing");
-        const permission = await MediaLibrary.requestPermissionsAsync();
-        if (!permission.granted) return;
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (!permission.granted) return;
 
-        ViewShot.captureScreen({
-          format: 'jpg',
-          quality: 0.8, 
-        }).then(
-          (uri) => {
-            (async () => {
-              await MediaLibrary.createAssetAsync(uri);
-              Alert.alert(
-                "Screen Capture",
-                "Screenshot has been saved to gallery.",
-              );
-            })();
-          },
-          (error) => console.error('Oops, Something Went Wrong', error),
-        );
+      ViewShot.captureScreen({
+        format: 'jpg',
+        quality: 0.8, 
+      }).then(
+        (uri) => {
+          (async () => {
+            await MediaLibrary.createAssetAsync(uri);
+            Alert.alert(
+              "Screen Capture",
+              "Screenshot has been saved to gallery.",
+            );
+          })();
+        },
+        (error) => console.error('Oops, Something Went Wrong', error),
+      );
     })();
 }
 

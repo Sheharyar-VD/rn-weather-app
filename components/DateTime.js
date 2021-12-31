@@ -51,15 +51,17 @@ const DateTime = ({weatherData, current, location, timezone}) => {
     const [time, setTime] = useState('');
 
     (async () => {
-        await Notification.scheduleNotificationAsync({
-            content: {
-                title: 'Weather Update',
-                body: 'Current Weather is '+current.temp+' C - '+weatherData[0].weather[0].main,
-            },
-            trigger: {
-                seconds: 10,
-            }
-        })
+        if (location) {
+            await Notification.scheduleNotificationAsync({
+                content: {
+                    title: 'Weather Update',
+                    body: 'Current Weather is '+current.temp+' C - '+weatherData[0].weather[0].main,
+                },
+                trigger: {
+                    seconds: 60,
+                }
+            })
+        }
       })();
 
     useEffect (() => {
