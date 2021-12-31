@@ -51,7 +51,7 @@ const DateTime = ({weatherData, current, location, timezone}) => {
     const [time, setTime] = useState('');
 
     (async () => {
-        if (location) {
+        if (current && location && weatherData[0]) {
             await Notification.scheduleNotificationAsync({
                 content: {
                     title: 'Weather Update',
