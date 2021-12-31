@@ -51,7 +51,7 @@ export default function App() {
     deferredUpdatesInterval: 60000, // minimum interval (in milliseconds) between updates
     // foregroundService is how you get the task to be updated as often as would be if the app was open
     foregroundService: {
-      notificationTitle: 'Using your location',
+      notificationTitle: 'Using your location services',
       notificationBody: 'To turn off, open settings for location permissions.',
     },
   });
