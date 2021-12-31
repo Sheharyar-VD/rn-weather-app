@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react'
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import {View, Text, Image, StyleSheet} from 'react-native';
 import moment from 'moment-timezone'
+import * as Notification from 'expo-notifications';
 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -46,8 +47,20 @@ const CurrentTempEl = ({now, data}) => {
 }
 
 const DateTime = ({weatherData, current, location, timezone}) => {
-    const [date, setDate] = useState('')
-    const [time, setTime] = useState('')
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+
+    (async () => {
+        await Notification.scheduleNotificationAsync({
+            content: {
+                title: 'Weather Update',
+                body: 'Current Weather is '+current.temp+' C - '+weatherData[0].weather[0].main,
+            },
+            trigger: {
+                seconds: 10,
+            }
+        })
+      })();
 
     useEffect (() => {
         setInterval(() => {
@@ -99,8 +112,6 @@ const DateTime = ({weatherData, current, location, timezone}) => {
 
 const styles = StyleSheet.create({
     container: {
-        //flex:1,
-        //flexDirection:"row",
         justifyContent:'space-between',
         padding: 15
     },

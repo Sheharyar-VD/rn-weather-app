@@ -4,7 +4,6 @@ import moment from 'moment-timezone'
 const FutureForecastHourly = ({data}) => {
     return (
         <View style={{flexDirection: 'row'}}>
-
             {
                 data && data.length > 0 ? 
 
@@ -12,14 +11,9 @@ const FutureForecastHourly = ({data}) => {
 
                     idx < 24 && <FutureForecastItem key={idx} forecastItem={data}/>
                 ))
-
                 :
-
                 <View/>
             }
-          
-            
-
         </View>
     )
 }

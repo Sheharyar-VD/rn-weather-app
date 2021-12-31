@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import React, {useEffect, useState} from 'react';
 import { StyleSheet, View, ImageBackground, Alert, Platform, Linking, TouchableOpacity, Image } from 'react-native';
 import * as Location from 'expo-location';
@@ -7,12 +6,15 @@ import * as IntentLauncher from 'expo-intent-launcher';
 import * as TaskManager from 'expo-task-manager';
 import * as MediaLibrary from 'expo-media-library';
 import * as ViewShot from 'react-native-view-shot';
+import * as Notification from 'expo-notifications';
 
-import DateTime from './components/DateTime'
-import WeatherScroll from './components/WeatherScroll'
-import WeatherScrollHourly from './components/WeatherScrollHourly'
-import NoLocation from './components/NoLocation'
+// components import
+import DateTime from './components/DateTime';
+import WeatherScroll from './components/WeatherScroll';
+import WeatherScrollHourly from './components/WeatherScrollHourly';
+import NoLocation from './components/NoLocation';
 
+// constants
 const API_KEY ='4b49bea74e98dad6a96f7c146603d13b';
 const URL = 'https://us1.locationiq.com/v1/reverse.php?key=';
 const LOCATION_API_KEY = 'pk.768ef5fb3f569573ffc9b5c5247acd30';
@@ -21,7 +23,7 @@ const capture = require('./assets/capture.jpeg');
 const BACKGROUND_FETCH_TASK = 'BACKGROUND_FETCH_TASK';
 
 export default function App() {
-  // 1 define the task passing its name and a callback that will be called whenever the location changes
+
   TaskManager.defineTask(BACKGROUND_FETCH_TASK, async ({ data: { locations }, error }) => {
     if (error) {
       console.error(error);
@@ -29,21 +31,20 @@ export default function App() {
     }
     const [location] = locations;
     try {
-      console.log('background location');
       const batteryLevel = await Battery.getBatteryLevelAsync();
-      console.log(batteryLevel);
+      
       stopLocationServices(batteryLevel);
       Battery.addBatteryLevelListener(({ batteryLevel }) => {
         stopLocationServices(batteryLevel);
       });
-      if (batteryLevel > 0.20) fetchDataFromApi(location.coords.latitude, location.coords.longitude);
+      
+      if (batteryLevel < 0.20) fetchDataFromApi(location.coords.latitude, location.coords.longitude);
       else setNoLocation(true);
     } catch (err) {
       console.error(err);
     }
   });
 
-  // 2 start the task
   Location.startLocationUpdatesAsync(BACKGROUND_FETCH_TASK, {
     accuracy: Location.Accuracy.Highest,
     distanceInterval: 1, // minimum change (in meters) betweens updates
@@ -57,13 +58,18 @@ export default function App() {
 
   const [data, setData] = useState({});
   const [locationData, setLocationData] = useState({});
-  const [noLocation, setNoLocation] = useState(false);
+  const [noLocation, setNoLocation] = useState(true);
 
   useEffect(() => {
     (async () => {
 
+      let notificationStatus = (await Notification.requestPermissionsAsync()).status;
+      if (notificationStatus !== 'granted') {
+        console.log('notification permissions denied');
+        return;
+      }
+
       const serviceStatus = await Location.getProviderStatusAsync();
-      console.log(serviceStatus);
       if (!serviceStatus.locationServicesEnabled) {
         if (Platform.OS === 'ios') {
           Linking.openURL('app-settings:')
@@ -75,7 +81,6 @@ export default function App() {
       }
 
       let foregroundStatus = (await Location.requestForegroundPermissionsAsync()).status;
-      console.log(foregroundStatus);
       if (foregroundStatus !== 'granted') {
         console.log('foreground permissions denied');
         setNoLocation(true);
@@ -83,7 +88,6 @@ export default function App() {
       }
 
       let backgroundStatus = (await Location.requestBackgroundPermissionsAsync()).status;
-      console.log(backgroundStatus);
       if (backgroundStatus !== 'granted') {
         console.log('background permissions denied');
         setNoLocation(true);
@@ -91,7 +95,7 @@ export default function App() {
       }
 
     })();
-  }, [])
+  }, []);
 
   const fetchDataFromApi = (latitude, longitude) => {
     if(latitude && longitude) {
@@ -118,18 +122,16 @@ export default function App() {
   }
 
   const onCaptureScreen = () => {
+    console.log("capturing 1233");
     (async () => {
-        console.log('on screen capture');
+      console.log("capturing");
         const permission = await MediaLibrary.requestPermissionsAsync();
         if (!permission.granted) return;
-        // To capture Screenshot
+
         ViewShot.captureScreen({
-          // Either png or jpg (or webm Android Only), Defaults: png
           format: 'jpg',
-          // Quality 0.0 - 1.0 (only available for jpg)
           quality: 0.8, 
         }).then(
-          //callback function to get the result URL of the screnshot
           (uri) => {
             (async () => {
               await MediaLibrary.createAssetAsync(uri);
@@ -141,9 +143,6 @@ export default function App() {
           },
           (error) => console.error('Oops, Something Went Wrong', error),
         );
-        //const assert = await MediaLibrary.createAssetAsync(image);
-        //await MediaLibrary.createAlbumAsync('ForecastWare', assert);
-        console.log('on screen capture end');
     })();
 }
 
@@ -194,5 +193,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 50,
-},
+  },
 });
+
+// // "permissions": ["ACCESS_BACKGROUND_LOCATION","ACCESS_COARSE_LOCATION","ACCESS_FINE_LOCATION"]

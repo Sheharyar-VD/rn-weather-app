@@ -12,14 +12,9 @@ const FutureForecast = ({data}) => {
 
                     idx !== 0 &&  <FutureForecastItem key={idx} forecastItem={data}/>
                 ))
-
                 :
-
                 <View/>
             }
-          
-            
-
         </View>
     )
 }

@@ -1,6 +1,5 @@
 import React from 'react'
-import {View, ScrollView, Image, Text, StyleSheet} from 'react-native'
-import moment from 'moment-timezone'
+import {ScrollView, StyleSheet} from 'react-native'
 import FutureForecast from './FutureForecast'
 
 const WeatherScroll = ({weatherData}) => {
