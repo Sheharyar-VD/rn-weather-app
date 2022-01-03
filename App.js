@@ -122,9 +122,11 @@ export default function App() {
               title: 'Battery Low',
               body: 'Stopping Location services and closing application',
           },
-          trigger: null,
+          trigger: {
+            repeats: false,
+            seconds: 5,
+          },
         });
-        Notification.removePushTokenSubscription(batteryNotification);
       })();
       Location.stopLocationUpdatesAsync(BACKGROUND_FETCH_TASK);
       setNoLocation(true);
